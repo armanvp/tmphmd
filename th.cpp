@@ -10,20 +10,46 @@
 
 using namespace std;
 
-void parse_DHT(char *str) {
-
+void parse_DHT(string str) {
+    
+    struct dht {
+        char humid[5];
+        char temp[5];
+    } dhtdata;
+    
     time_t timer;
-    struct tm *timeinfo;
+    tm *timestmp;
+    char timestr[51];
     
-    time(&timer);
-    timeinfo = localtime(&timer);
+    int ok = 0;
     
-    //char *token = strtok(str,"|");
-    //while(token != NULL) {
-        cout<<asctime(timeinfo)<<"|"<<str;
-    //    token = strtok(NULL,"|");
-    //}
     
+    char *strc = (char *) str.c_str();
+    char *token = std::strtok(strc,"|");
+    while(token != NULL) {
+        if(strncmp(token,"000",3) == 0) {
+  
+        time(&timer);
+        timestmp = localtime(&timer);
+            
+        ok = 1;
+        token = strtok(NULL,"|");
+        strncpy(dhtdata.humid,token,4);
+        dhtdata.humid[sizeof(dhtdata.humid)-1] = '\0';
+            
+        token = strtok(NULL,"|");
+        strncpy(dhtdata.temp,token,4);
+        dhtdata.temp[sizeof(dhtdata.temp)-1] = '\0';
+            
+        }else{
+            break;
+        }
+    }
+    
+    if(ok == 1) {
+        strftime(timestr,50,"%Y-%m-%d %H:%M:%S",timestmp);
+        cout<<timestr<<" "<<dhtdata.humid<<" "<<dhtdata.temp<<endl;
+    }
 }
 
 int main(int argc, char **argv) {
