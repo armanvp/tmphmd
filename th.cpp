@@ -6,16 +6,23 @@
 #include <fcntl.h>
 #include <strings.h>
 #include <cstring>
+#include <time.h>
 
 using namespace std;
 
 void parse_DHT(char *str) {
+
+    time_t timer;
+    struct tm *timeinfo;
     
-    char *token = strtok(str,",\t");
-    while(token != NULL) {
-        cout<<token<<endl;
-        token = strtok(NULL,",\t");
-    }
+    time(&timer);
+    timeinfo = localtime(&timer);
+    
+    //char *token = strtok(str,"|");
+    //while(token != NULL) {
+        cout<<asctime(timeinfo)<<"|"<<str;
+    //    token = strtok(NULL,"|");
+    //}
     
 }
 
