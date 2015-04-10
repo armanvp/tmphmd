@@ -7,10 +7,32 @@
 #include <strings.h>
 #include <cstring>
 #include <time.h>
+#include <unistd.h>
+
+#include "jdb.h"
+#include <string>
 
 using namespace std;
 
-void parse_DHT(string str) {
+char *callbackSqlCreate() {
+
+    return (char *) "CREATE TABLE TMPHMD("    \
+          "TIMESTAMP KEY NOT NULL," \
+          "HMD TEXT NOT NULL,"      \
+          "TMP TEXT NOT NULL );";
+
+}
+
+void readingInsert(JDb *jdb, char *timestamp, char *humid, char *temp) {
+
+  string sql = "INSERT INTO TMPHMD (TIMESTAMP,HMD,TMP) VALUES ('" +
+		string(timestamp) + "','" + string(humid) + "','" + 
+	string(temp) + "');";
+  jdb->exec((char *)sql.c_str());
+
+}
+
+void parse_DHT(string str, JDb *jdb) {
     
     struct dht {
         char humid[5];
@@ -48,8 +70,11 @@ void parse_DHT(string str) {
     
     if(ok == 1) {
         strftime(timestr,50,"%Y-%m-%d %H:%M:%S",timestmp);
-        cout<<timestr<<" "<<dhtdata.humid<<" "<<dhtdata.temp<<endl;
+        //cout<<timestr<<" "<<dhtdata.humid<<" "<<dhtdata.temp<<endl;
+        readingInsert(jdb,(char*)timestr,(char*)dhtdata.humid,(char *)dhtdata.temp);
     }
+
+    sleep(300);
 }
 
 int main(int argc, char **argv) {
@@ -58,6 +83,8 @@ int main(int argc, char **argv) {
   size_t rdlen = 0;
   char buffer[255];
   struct termios opt;
+    
+  JDb tmpJDb("tmphmd.db",&callbackSqlCreate,NULL,1);
 
   fd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY | O_NDELAY);
   if(fd == -1) {
@@ -75,7 +102,7 @@ int main(int argc, char **argv) {
 
   rdlen = read(fd,buffer,255);
   while(rdlen != -1) {
-    parse_DHT(buffer);
+    parse_DHT(buffer, &tmpJDb);
     bzero(buffer,255);
     rdlen = read(fd,buffer,255);
   }
